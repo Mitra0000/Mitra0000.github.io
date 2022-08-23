@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  </head>
+  <body>
+    <div id=\"a\">
+      <button id=\"b\" onclick='getDevices();'>Click me</button>
+    </div>
+  </body>
+    <script>
+      async function getDevices() {
+        let devices = await navigator.mediaDevices.enumerateDevices();
+        for (let device of devices) {
+          let p = document.createElement(\"p\;
+          p.innerHTML = \"id: \" + device.deviceId + \"kind: \" + device.kind + \"label: \" + device.label;
+          document.getElementById(\"a\.appendChild(p);
+        }
+      }
+    </script>
+</html>
