@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
   </head>
   <body>
     <div id="a">
-      <button id="b" onclick='getDevices();'>Click me</button>
+      <button onclick="getDevices();">Click me</button>
     </div>
   </body>
     <script>
       async function getDevices() {
+        await navigator.mediaDevices.getUserMedia({audio: true, video: true});
         let devices = await navigator.mediaDevices.enumerateDevices();
         for (let device of devices) {
           let p = document.createElement("p");
