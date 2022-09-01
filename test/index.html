@@ -10,12 +10,12 @@
     <script>
       async function getDevices() {
         await navigator.mediaDevices.getUserMedia({audio: true, video: true});
-        let devices = await navigator.mediaDevices.enumerateDevices();
-        for (let device of devices) {
-          let p = document.createElement("p");
-          p.innerHTML = "id: " + device.deviceId + "kind: " + device.kind + "label: " + device.label;
-          document.getElementById("a").appendChild(p);
-        }
+        //let devices = await navigator.mediaDevices.enumerateDevices();
+        //for (let device of devices) {
+        //  let p = document.createElement("p");
+        //  p.innerHTML = "id: " + device.deviceId + "kind: " + device.kind + "label: " + device.label;
+        //  document.getElementById("a").appendChild(p);
+        //}
       }
     </script>
 </html>
