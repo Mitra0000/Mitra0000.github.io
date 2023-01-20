@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Interview Notes Tool</title>
+    <style>
+      * {
+	    margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-size: 1em;
+		font-family: 'Roboto', sans-serif;
+      }
+	  
+	  #content {
+	    display: inline-block;
+		margin-left: 50%;
+		transform: translateX(-50%);
+	  }
+	  
+	  #timer-container {
+		height: 10vh;
+		margin:auto;
+		margin-bottom: 15px;
+	  }
+	  
+	  #timer {
+	    text-align: center;
+		margin-top: 15px;
+		margin-bottom: 15px;
+		font-size: 4em;
+	  }
+	  
+	  #timer-buttons {
+	    display: flex;
+		justify-content: space-between;
+	  }
+	  
+	  #timer-buttons button {
+	    width: 32%;
+	  }
+
+	  #logs-container {
+		height: 80vh;
+		aspect-ratio: 2/3;
+		border: 2px solid black;
+		margin: auto;
+		overflow-y: auto;
+	  }
+	  
+      #form {
+        background: #13293D;
+        padding: 3px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+
+      input {
+		border: 0;
+		padding: 10px;
+		width: 90%;
+		margin-right: .5%;
+	  }
+
+      button {
+		width: 9%;
+		background: #006494;
+		color: white;
+		border: none;
+		border-radius: 8px;
+		padding: 10px;
+	  }
+	  
+	  button:hover {
+	    background: #247BA0;
+		transition: 0.2s;
+	  }
+	  
+	  button:active {
+		background: #006494
+	  }
+
+      #logs {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+	  }
+
+      #logs li {
+		padding: 5px 10px; 
+	  }
+
+      #logs li:nth-child(odd) {
+		background: #E8F1F2;
+	  }
+    </style>
+	  <link rel="preconnect" href="https://fonts.googleapis.com">
+	  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  </head>
+  <script>
+    var time = 0;
+    var timer;
+	var isRunning = false;
+  
+    function createNote() {
+	  if (!isRunning) {
+	    startTimer();
+	  }
+	  let note = document.getElementById("m").value.replace(" he ", " TC ").replace(" she ", " TC ").replace(" they ", " TC ");
+	  let timestamp = document.getElementById("timer").innerHTML;
+	  if (note.trim() != "") {
+		processMessage(timestamp + ": " + note);
+	  }
+      document.getElementById("m").value = "";
+      document.getElementById("m").focus();
+    };
+
+    function processMessage(newLog) {
+      var list = document.getElementById('logs');
+      var entry = document.createElement('li');
+      entry.appendChild(document.createTextNode(newLog));
+      list.appendChild(entry);
+    };
+	
+	function startTimer() {
+	  isRunning = true;
+	  timer = setInterval(function() {
+	    time += 1;
+	    document.getElementById("timer").innerHTML = String(Math.floor(time / 60)).padStart(2, "0") + ":" + String(time % 60).padStart(2, "0");
+	  }, 1000);
+	};
+	
+	function pauseTimer() {
+	  isRunning = false;
+	  clearInterval(timer);
+	};
+	
+	function resetTimer() {
+	  time = 0;
+	  document.getElementById("timer").innerHTML = "00:00";
+	};
+
+    window.addEventListener("DOMContentLoaded", (event) => {
+      function keypress(e) {
+        e = e || window.event;							
+        if (e.keyCode == '13') {
+          createNote();
+        };
+      };
+      document.onkeydown = keypress; 
+    });
+  </script>
+  <body>
+    <div id="content">
+      <div id="timer-container">
+	    <h1 id="timer">00:00</h1>
+	    <div id="timer-buttons">
+	      <button onClick="startTimer()">Start</button>
+	      <button onClick="pauseTimer()">Pause</button>
+	      <button onClick="resetTimer()">Reset</button>
+	    </div>
+	  </div>
+      <div id="logs-container">
+	    <ul id="logs"></ul>
+	  </div>
+	</div>
+    <div id="form">
+      <input id="m" autofocus autocomplete="off" />
+      <button id="button1" onClick="createNote()">Add note</button>
+    </div>
+  </body>
+</html>
