@@ -4,6 +4,33 @@
     <title>Notey</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+      #logs-container {
+        display: flex;
+        flex-direction: column-reverse;
+        overflow-y: scroll;
+      }
+
+      @media only screen and (max-width: 991px) {
+        #logs-container {
+          flex-direction: column;
+        }
+      }
+
+      @media only screen and (max-width: 600px) {
+        #header {
+          display: contents;
+        }
+
+        #widgets {
+          margin-top: 0px!important;
+        }
+
+        #fixed-height {
+          height: 82vh!important;
+        }
+
+      }
+
       #logs li:nth-child(odd) {
         background: #F4FAFF;
       }
@@ -76,14 +103,14 @@
     });
   </script>
   <body>
+    <div id="header" class="page-header fixed-top" style="pointer-events: none;">
+      <h1 class="display-1 ms-4">Notey</h1>
+    </div>
     <div class="container mb-5">
-      <div class="page-header fixed-top" style="pointer-events: none;">
-        <h1 class="display-1 ms-4">Notey</h1>
-      </div>
-      <div class="d-flex flex-column" style="height: 90vh">
-        <div class="row mt-4">
-          <div class="col-lg-1 col-sm-12"></div>
-          <div class="col-lg-10 col-sm-12 center-block text-center">
+      <div id="fixed-height" class="d-flex flex-column" style="height: 90vh">
+        <div id="widgets" class="row mt-4">
+          <div class="col-lg-1"></div>
+          <div class="col-lg-10 center-block text-center">
             <h1 id="timer" class="display-1">00:00</h1>
             <div class="btn-group-lg">
               <button class="btn btn-primary" onClick="startTimer()">Start</button>
@@ -91,13 +118,13 @@
               <button class="btn" onClick="resetTimer()">Reset</button>
             </div>
           </div>
-          <div class="col-lg-1 col-sm-12 align-bottom">
+          <div class="col-lg-1 align-bottom">
             <button id="copy" class="btn btn-light rounded" onClick="copyContents()">
 			        <img src="copy.svg" width=30 height=30/>
 			      </button>
           </div>
         </div>
-        <div class="row mt-4 flex-grow-1" style="display: flex; flex-direction: column-reverse; overflow-y: scroll;">
+        <div id="logs-container" class="row mt-4 flex-grow-1">
           <div class="col-lg center-block">
             <div class="card h-100">
               <ul id="logs" class="list-group"></ul>
