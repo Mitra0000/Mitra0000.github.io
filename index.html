@@ -14,7 +14,7 @@
     .col-lg {
 	  min-width: 33%;
 	}
-	
+
 	.card {
 	  margin-top: 20px;
 	  filter: drop-shadow(10px 10px 6px #333333);
@@ -45,7 +45,7 @@
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
     }
-	
+
 	.unhidden .flip-card-back {
 	  display: initial;
 	}
@@ -56,7 +56,7 @@
 	  display: none;
 	  overflow-y: auto;
     }
-	
+
 	.flip-card-back button {
 	  margin-bottom: 15px;
 	}
@@ -72,7 +72,7 @@
     document.getElementById(id).classList.remove("flipped");
 	setTimeout(function() {document.getElementById(id).classList.remove("unhidden");}, 300);
   }
-  
+
   function onResize() {
     let backCardBodies = document.querySelectorAll(".flip-card-back .card-body");
 	let frontCardBodies = document.querySelectorAll(".flip-card-front .card-body");
@@ -87,9 +87,9 @@
 
 <div class="bg-dark text-white p-5 text-center" style="background-attachment: fixed; background-image: url(https://img.freepik.com/free-vector/vector-repeating-futuristic-design-seamless-pattern-background_401030-355.jpg);">
   <h1>Alex Mitra</h1>
-  <p>Software Engineer</p> 
+  <p>Software Engineer</p>
 </div>
-  
+
 <div class="container mb-5">
   <div class="row mt-4">
 	<div class="col-lg">
@@ -173,7 +173,7 @@
 	</div>
 
   </div>
-  
+
   <div class="row">
 
 	<div class="col-lg">
@@ -221,30 +221,28 @@
 		</div>
       </div>
 	</div>
-	<div class="col-lg"></div>
-<!--
 	<div class="col-lg">
-	  <div id="flip-card-project6" class="flip-card">
+	  <div id="flip-card-notey" class="flip-card">
         <div class="flip-card-inner">
 	      <div class="card flip-card-front">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Noun_Project_process_icon_2519390.svg/1024px-Noun_Project_process_icon_2519390.svg.png" alt="Project 6 Icon" style="padding: 10px">
+            <img src="Images/Notey.png" alt="Notey" style="padding: 10px">
             <div class="card-body">
-              <h4 class="card-title">Project 6</h4>
-              <p class="card-text">Project 6 subtitle</p>
-			  <button class="btn btn-primary" onclick="flip('flip-card-project6')">Read</button>
+              <h4 class="card-title">Notey</h4>
+              <p class="card-text">A Timestamped Note Taking Tool</p>
+			  <button class="btn btn-primary" onclick="flip('flip-card-notey')">Read</button>
              </div>
 		  </div>
           <div class="card flip-card-back">
             <div class="card-body">
-              <h4 class="card-title">Project 6</h4>
-              <h5 class="card-text">Project 6 subtitle</h5>
-              <p class="card-text">Project 6 content</p>
-              <button class="btn btn-primary" onclick="unflip('flip-card-project6')">Back</button>
+              <h4 class="card-title">Notey</h4>
+              <h5 class="card-text">A Timestamped Note Taking Tool</h5>
+              <p class="card-text">Notey is an online tool used to take notes which include a timestamp. The concept is simple but has a useful application during technical interviews. An interviewer can use notey to take notes during an interview and when they look back, they will have a complete timeline of what the candidate did throughout the entire time. At the time of writing, Notey is a simple, static webpage but I hope to improve the tool by storing notes in local storage and adding an optional alarm for the timer. You can try out Notey <a href="https://themitra.co.uk/notey" target="_blank">here.</a></p>
+              <button class="btn btn-primary" onclick="unflip('flip-card-notey')">Back</button>
 			</div>
 		  </div>
 		</div>
       </div>
-	</div>-->
+	</div>
 
   </div>
 
