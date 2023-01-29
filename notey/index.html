@@ -47,7 +47,7 @@
     if (!isRunning) {
       startTimer();
     }
-    let note = document.getElementById("m").value.replace(" he ", " TC ").replace(" she ", " TC ").replace(" they ", " TC ").replace(" his ", "TC's").replace(" her ", "TC's");
+    let note = sanitise(document.getElementById("m").value);
 
     let timestamp = document.getElementById("timer").innerHTML;
     if (note.trim() != "") {
@@ -56,6 +56,20 @@
       document.getElementById("m").value = "";
       document.getElementById("m").focus();
     };
+
+    function sanitise(message) {
+      words = message.split(" ");
+      // TODO: Find a way to distinguish between her (possessive) and her (referential).
+      for (let i = 0; i < words.length; i++) {
+        let word = words[i].toLowerCase();
+        if (word == "he" || word == "him" || word == "she" || word == "her" || word == "they") {
+          words[i] = "TC";
+        } else if (word == "his" || word == "their") {
+          words[i] = "TC's";
+        }
+      }
+      return words.join(" ");
+    }
 
     function processMessage(newLog) {
       var list = document.getElementById('logs');
