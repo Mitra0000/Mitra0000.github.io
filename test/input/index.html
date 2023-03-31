@@ -12,10 +12,12 @@ input {
 <script>
 for (let i = 0; i < 200; i++) {
   let title = document.createElement("p");
-  title.innerText = "Input " + (i + 1);
+  title.innerText = "foo";
   let el = document.createElement("input");
+  el.style.width = "90%";
   document.getElementById("d").appendChild(title);
   document.getElementById("d").appendChild(el);
+  title.innerText = "X: " + el.style.left + ", Y: " + el.style.top;
 }
 </script>
 </body>
