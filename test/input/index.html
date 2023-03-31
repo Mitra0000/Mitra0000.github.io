@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+input {
+  display: block;
+}
+</style>
+</head>
+<body>
+<div id = "d"></div>
+<script>
+for (let i = 0; i < 200; i++) {
+  let title = document.createElement("p");
+  title.innerText = "Input " + (i + 1);
+  let el = document.createElement("input");
+  document.getElementById("d").appendChild(title);
+  document.getElementById("d").appendChild(el);
+}
+</script>
+</body>
+</html>
