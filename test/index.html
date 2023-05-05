@@ -20,8 +20,7 @@
       }
       
       async function getUserMedia() {
-        await navigator.mediaDevices.getUserMedia({audio: true, video: true});
-        alert("Completed get user media");
+        navigator.mediaDevices.getUserMedia({audio: true, video: true}).then(() -> {alert("Completed get user media");});
       }
     </script>
 </html>
