@@ -5,6 +5,7 @@
   <body>
     <div id="a">
       <button onclick="getDevices();">Click me</button>
+      <button onclick="getUserMedia();">Get User Media</button>
     </div>
   </body>
     <script>
@@ -16,6 +17,11 @@
           p.innerHTML = "id: " + device.deviceId + "kind: " + device.kind + "label: " + device.label;
           document.getElementById("a").appendChild(p);
         }
+      }
+      
+      async function getUserMedia() {
+        await navigator.mediaDevices.getUserMedia({audio: true, video: true});
+        alert("Completed get user media");
       }
     </script>
 </html>
