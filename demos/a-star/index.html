@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    * {
+      color: white;
+      font-family: "Roboto", sans-serif;
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    body {
+      background-color: #34312D
+    }
+
+    button {
+      outline: none;
+    }
+
+    button:active {
+      outline: none;
+    }
+
+    button:hover {
+      outline: none;
+    }
+
+    h4 {
+      font-size: 2em;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    .dialogBack {
+      width: 100vw;
+      height: 100vh;
+      background-color: #34312D;
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+
+    .dialog {
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      width: 50vw;
+      height: 50vh;
+      max-width: 500px;
+      max-height: 300px;
+      left: 50%;
+      top: 50%;
+      background-color: #7E7F83;
+      filter: drop-shadow(2px 4px 6px black);
+      transform: translate(-50%, -50%);
+    }
+
+    .gridConfig {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-evenly;
+      width: 100%;
+    }
+
+    #setRowsCols {
+      background-color: rgba(0, 0, 0, 0);
+      font-size: 2em;
+      padding-left: 10%;
+      padding-right: 10%;
+    }
+
+    #setRowsCols:hover {
+      background-color: #45423E;
+    }
+
+    #container {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #grid {
+      filter: drop-shadow(2px 4px 6px black);
+    }
+
+    #controls {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      filter: drop-shadow(2px 4px 6px black);
+    }
+
+    @media screen and (orientation: landscape) {
+      #content {
+        display: flex;
+        flex-direction: row;
+      }
+
+      #controls {
+        flex-direction: column;
+        margin-left: 10px;
+      }
+
+      .controlsIcon {
+        width: 50px;
+      }
+    }
+    @media screen and (orientation: portrait) {
+      #content {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #controls {
+        flex-direction: row;
+        margin-top: 10px;
+      }
+
+      .controlsIcon {
+        height: 50px;
+      }
+    }
+  </style>
+</head>
+<script>
+var SETUP_STATE = 1;
+var SETUP_START = 1;
+var SETUP_END = 2;
+var SETUP_OBSTACLES = 4;
+const getSubtitle = {
+  1: "Choose starting square",
+  2: "Choose end square",
+  4: "Select obstacles",
+  0: "A* Demo",
+};
+var buttons = [];
+// Start node coordinates stored as [X, Y].
+var start;
+// End node coordinates stored as [X, Y].
+var end;
+// Nodes which can no longer be edited (including obstacles).
+var closedNodes = new Set();
+// Map from nodes to their G values (the distance from start to that node).
+var gVals = {};
+// Map from nodes to their F values (G value + H value).
+var fVals = {};
+// Map from nodes to their H values (the distance from that node to the end).
+var hVals = {};
+// Map of parent pointers to recreate the shortest path.
+var parents = {};
+
+var autoModeEnabled = false;
+var autoInterval;
+
+// Color constants.
+const GREEN = "#239451";
+const RED = "#942323";
+const BLUE = "#2194FF";
+const PURPLE = "#942394";
+const ORANGE = "#F18805";
+const BLACK = "#181818";
+const BUTTON_BACKGROUND = "#7E7F83";
+const PADDING = 30;
+
+function isStart(x, y) {
+  return x == start[0] && y == start[1];
+}
+
+function isEnd(x, y) {
+  return x == end[0] && y == end[1];
+}
+
+function getButton(x, y) {
+  if (x < 0 || x >= buttons.length || y < 0 || y > buttons[x].length) {
+    return null;
+  }
+  return buttons[x][y];
+};
+
+function getButton2(arr) {
+  return getButton(arr[0], arr[1]);
+};
+
+function distance(from, to) {
+  return Math.floor(Math.sqrt(Math.pow(10 * (to[0] - from[0]), 2) + Math.pow(10 * (to[1] - from[1]), 2)));
+};
+
+function g(x, y) {
+  return distance(start, [x, y]);
+};
+
+function h(x, y) {
+  return distance([x, y], end)
+};
+
+function f(x, y) {
+  return g(x, y) + h(x, y);
+};
+
+/**
+ * Sets up the initial grid and logic for buttons to call processButton with correct coordinates.
+ */
+function setup() {
+  let rows = [];
+  NUM_ROWS = parseInt(document.getElementById("rows").value);
+  NUM_COLS = parseInt(document.getElementById("cols").value);
+  let size = Math.floor(Math.min(document.documentElement.clientWidth / NUM_COLS - PADDING, document.documentElement.clientHeight / NUM_ROWS - PADDING));
+  let fontSize = size / 4;
+  document.getElementById("dialogBacking").style.display = "none";
+  document.getElementById("setupDialog").style.display = "none";
+  buttons = Array.from(Array(NUM_COLS), () => new Array(NUM_ROWS));
+  for (let i = 0; i < NUM_ROWS; i++) {
+    let row = document.createElement("tr");
+    rows.push(row);
+    document.getElementById("t").appendChild(row);
+  }
+  for (let i = 0; i < NUM_ROWS * NUM_COLS; i++) {
+    let item = document.createElement("td");
+    let button = document.createElement("button");
+    button.style.width = size + "px";
+    button.style.height = size + "px";
+    button.style.fontSize = fontSize + "px";
+    button.style.color = "white";
+    button.style.backgroundColor = BUTTON_BACKGROUND;
+    button.addEventListener("click", function() {processButton(i % NUM_COLS, Math.floor(i / NUM_COLS));});
+    item.appendChild(button);
+    rows[Math.floor(i / NUM_COLS)].appendChild(item);
+    buttons[i % NUM_COLS][Math.floor(i / NUM_COLS)] = button;
+  }
+};
+
+function resizeButtons() {
+  let size = Math.floor(Math.min(document.documentElement.clientWidth / NUM_COLS - PADDING, document.documentElement.clientHeight / NUM_ROWS - PADDING));
+  for (row of buttons) {
+    for (col of row) {
+      col.style.width = size + "px";
+      col.style.height = size + "px";
+    }
+  }
+}
+
+/**
+ * Handles a button press based on the state of the demo.
+ * @param {Number} x X position of the button pressed.
+ * @param {Number} y Y position of the button pressed.
+ */
+function processButton(x, y) {
+  let btn = getButton(x, y);
+
+  // During setup, check whether to set start, end or obstacles.
+  if (SETUP_STATE) {
+    if (SETUP_STATE & SETUP_START) {
+        updateStart(btn, x, y);
+    } else if (SETUP_STATE & SETUP_END) {
+        updateEnd(btn, x, y);
+    } else if (SETUP_STATE & SETUP_OBSTACLES) {
+        updateObstacles(btn, x, y);
+    }
+    return;
+  }
+
+  // If a non relaxed button is clicked, we should do nothing.
+  if (btn.textContent == "" && !isStart(x, y)) {
+    return;
+  }
+
+  // If the end button is clicked, follow parent pointers to mark the path.
+  if (isEnd(x, y)) {
+    node = end;
+    if (node in parents) {
+      node = parents[node];
+    }
+    while (node in parents) {
+      getButton2(node).style.backgroundColor = ORANGE;
+      node = parents[node];
+    }
+    if (autoModeEnabled) {
+      toggleAutomatic();
+    }
+    return;
+  }
+
+  // Iterate through the neighbours and relax each of them
+  let neighbours = [];
+  for (let newX = x - 1; newX <= x + 1; newX++) {
+    for (let newY = y - 1; newY <= y + 1; newY++) {
+      if (newX == x && newY == y) {
+        continue;
+      }
+      let neighbour = getButton(newX, newY);
+      if (neighbour != null && !closedNodes.has(newX + "," + newY)) {
+        neighbours.push([newX, newY]);
+      }
+    }
+  }
+  for (let neighbour of neighbours) {
+    relax(neighbour, [x, y]);
+  }
+  closedNodes.add(x + "," + y);
+
+  // Don't mark the start node in purple.
+  if (!isStart(x, y)) {
+    btn.style.backgroundColor = PURPLE;
+  }
+}
+
+function relax(node, parent) {
+  let existing = extractValsFromNode(node);
+  let hVal = h(node[0], node[1]);
+  let gVal = gVals[parent] + distance(parent, node);
+  let fVal = hVal + gVal;
+  if (existing != null && fVal > existing[0]) {
+    return;
+  }
+  console.log(fVal);
+  if (existing != null) {
+    console.log(existing[0]);
+  }
+  gVals[node] = gVal;
+  fVals[node] = fVal;
+  hVals[node] = hVal;
+  parents[node] = parent;
+  let btn = getButton(node[0], node[1]);
+  btn.innerHTML = gVal + "  " + hVal + "<br>" + fVal;
+  if (node[0] != end[0] || node[1] != end[1]) {
+    btn.style.backgroundColor = BLUE;
+  }
+};
+
+/**
+ * Extracts the F, G & H values from the given node.
+ * @param {Array[Number]} node A 2 length array containing the X, Y position of a button.
+ * @return {Array[String]} An array containing the F, G & H values of the button (in that order) or null if those values haven't been calculated yet. 
+ */
+function extractValsFromNode(node) {
+  let btn = getButton(node[0], node[1]);
+  let vals = btn.innerHTML;
+  console.log(vals);
+  if (vals == null || !vals.trim()) {
+    return null;
+  }
+  vals = vals.split("<br>");
+  if (vals == null) {
+    return null;
+  }
+  vals[0] = vals[0].split("  ");
+  return [vals[1], vals[0][0], vals[0][1]];
+};
+
+function updateStart(btn, x, y) {
+  if (start) {
+    getButton2(start).style.backgroundColor = BUTTON_BACKGROUND;
+  }
+  start = [x, y]
+  btn.style.backgroundColor = GREEN;
+}
+
+function updateEnd(btn, x, y) {
+  if (end) {
+    getButton2(end).style.backgroundColor = BUTTON_BACKGROUND;
+  }
+  end = [x, y]
+  btn.style.backgroundColor = RED;
+}
+
+function updateObstacles(btn, x, y) {
+  let pos = x + "," + y;
+  if (closedNodes.has(pos)) {
+    closedNodes.delete(pos);
+    getButton(x, y).style.backgroundColor = BUTTON_BACKGROUND;
+  } else {
+    closedNodes.add(pos);
+    getButton(x, y).style.backgroundColor = BLACK;
+  }
+}
+
+function progress() {
+  if (SETUP_STATE == SETUP_START && start == null) {
+    return;
+  }
+  if (SETUP_STATE == SETUP_END && end == null) {
+    return;
+  }
+  SETUP_STATE = (SETUP_STATE * 2) % 8;
+  console.log(getSubtitle);
+  document.getElementById("subtitle").innerText = getSubtitle[SETUP_STATE];
+  if (!SETUP_STATE) {
+    gVals[start] = 0;
+    fVals[start] = 0;
+    hVals[start] = 999;
+  }
+}
+
+function chooseNextNode() {
+  let minFValue = 99999999;
+  let minHValue = 99999999;
+  let minNode = null;
+  for (const key in fVals) {
+    if (closedNodes.has(key)) {
+      continue;
+    }
+    if (fVals[key] < minFValue) {
+      minFValue = fVals[key];
+      minHValue = hVals[key];
+      minNode = key;
+    } else if (fVals[key] == minFValue && hVals[key] < minHValue) {
+      minFValue = fVals[key];
+      minHValue = hVals[key];
+      minNode = key;
+    }
+  }
+  if (minNode == null) {
+    clearInterval(autoInterval);
+    return;
+  }
+  getButton2(minNode.split(",")).click();
+}
+
+function toggleAutomatic() {
+  if (SETUP_STATE) {
+    return;
+  }
+  autoModeEnabled = !autoModeEnabled;
+  if (autoModeEnabled) {
+    document.getElementById("playIcon").style.display = "none";
+    document.getElementById("pauseIcon").style.display = "";
+    autoInterval = setInterval(chooseNextNode, 3000 - document.getElementById("speed").value);
+  } else {
+    clearInterval(autoInterval);
+    document.getElementById("playIcon").style.display = "";
+    document.getElementById("pauseIcon").style.display = "none";
+  }
+}
+
+function updateSpeed(newSpeed) {
+  clearInterval(autoInterval);
+  if (autoModeEnabled) {
+    autoInterval = setInterval(chooseNextNode, 3000 - newSpeed);
+  }
+  
+}
+
+window.addEventListener('DOMContentLoaded', (event) => {
+  document.addEventListener("keypress", function(e) {
+    if (e.keyCode == 13) {
+      if (document.getElementById("setupDialog").style.display != "none") {
+        setup();
+      }
+      else {
+        progress();
+      }
+      e.preventDefault();
+    }
+  });
+});
+</script>
+<body onresize="resizeButtons()">
+<div id="container">
+  <div id="info">
+    <h1 id="subtitle">Choose starting square</h1>
+  </div>
+  <div id="content">
+    <div id="grid">
+      <table id="t"></table>
+    </div>
+    <div id="controls">
+        <svg version="1.1" id="nextIcon" xmlns="http://www.w3.org/2000/svg" class="controlsIcon" onclick="progress()" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88" xml:space="preserve"><g><path stroke="white" fill="white" d="M37.95,4.66C45.19,1.66,53.13,0,61.44,0c16.96,0,32.33,6.88,43.44,18c5.66,5.66,10.22,12.43,13.34,19.95 c3,7.24,4.66,15.18,4.66,23.49c0,16.96-6.88,32.33-18,43.44c-5.66,5.66-12.43,10.22-19.95,13.34c-7.24,3-15.18,4.66-23.49,4.66 c-8.31,0-16.25-1.66-23.49-4.66c-7.53-3.12-14.29-7.68-19.95-13.34C12.34,99.22,7.77,92.46,4.66,84.93C1.66,77.69,0,69.75,0,61.44 c0-8.31,1.66-16.25,4.66-23.49C7.77,30.42,12.34,23.66,18,18C23.65,12.34,30.42,7.77,37.95,4.66L37.95,4.66z M43.11,67.76 c-3.54-0.03-6.38-2.92-6.35-6.46c0.03-3.54,2.92-6.38,6.46-6.35l21.63,0.13l-7.82-7.95c-2.48-2.52-2.45-6.58,0.07-9.05 c2.52-2.48,6.57-2.45,9.05,0.08l18.67,18.97c2.45,2.5,2.45,6.49,0,8.98L66.52,84.72c-2.48,2.52-6.53,2.55-9.05,0.08 c-2.52-2.48-2.55-6.53-0.08-9.05l7.73-7.85L43.11,67.76L43.11,67.76z M42.86,16.55c-5.93,2.46-11.28,6.07-15.76,10.55 c-4.48,4.48-8.09,9.83-10.55,15.76c-2.37,5.71-3.67,11.99-3.67,18.58c0,6.59,1.31,12.86,3.67,18.58 c2.46,5.93,6.07,11.28,10.55,15.76c4.48,4.48,9.83,8.09,15.76,10.55c5.72,2.37,11.99,3.67,18.58,3.67c6.59,0,12.86-1.31,18.58-3.67 c5.93-2.46,11.28-6.07,15.76-10.55c4.48-4.48,8.09-9.82,10.55-15.76c2.37-5.71,3.67-11.99,3.67-18.58c0-6.59-1.31-12.86-3.67-18.58 c-2.46-5.93-6.07-11.28-10.55-15.76c-4.48-4.48-9.83-8.09-15.76-10.55c-5.71-2.37-11.99-3.67-18.58-3.67S48.58,14.19,42.86,16.55 L42.86,16.55z"/></g></svg>
+
+<svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="controlsIcon" onclick="toggleAutomatic()" viewBox="0 0 512 512"><path fill="white" fill-rule="nonzero" d="M256 0c70.69 0 134.7 28.66 181.02 74.98C483.35 121.3 512 185.31 512 256c0 70.69-28.65 134.7-74.98 181.02C390.7 483.34 326.69 512 256 512c-70.69 0-134.69-28.66-181.02-74.98C28.66 390.7 0 326.69 0 256c0-70.69 28.66-134.7 74.98-181.02C121.31 28.66 185.31 0 256 0zm82.96 272.77c14.72-9.51 14.67-20.09 0-28.51L223.94 160.1c-11.99-7.53-24.5-3.11-24.17 12.55l.47 165.35c1.03 16.98 10.72 21.63 25.01 13.78l113.71-79.01zm66.97-166.7C367.57 67.7 314.56 43.96 256 43.96c-58.55 0-111.57 23.74-149.93 62.11C67.7 144.43 43.96 197.45 43.96 256c0 58.55 23.74 111.57 62.11 149.93 38.36 38.37 91.38 62.11 149.93 62.11 58.56 0 111.57-23.74 149.93-62.11 38.37-38.36 62.11-91.38 62.11-149.93 0-58.55-23.74-111.57-62.11-149.93z"/></svg>
+
+        <svg version="1.1" id="pauseIcon" style="display: none;" xmlns="http://www.w3.org/2000/svg" class="controlsIcon" onclick="toggleAutomatic()" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88" xml:space="preserve"><g><path stroke="white" fill="white" d="M61.44,0c16.97,0,32.33,6.88,43.44,18c11.12,11.12,18,26.48,18,43.44c0,16.97-6.88,32.33-18,43.44 c-11.12,11.12-26.48,18-43.44,18c-16.97,0-32.33-6.88-43.44-18C6.88,93.77,0,78.41,0,61.44C0,44.47,6.88,29.11,18,18 C29.11,6.88,44.47,0,61.44,0L61.44,0z M42.3,39.47h13.59v43.95l-13.59,0V39.47L42.3,39.47L42.3,39.47z M66.99,39.47h13.59v43.95 l-13.59,0V39.47L66.99,39.47L66.99,39.47z M97.42,25.46c-9.21-9.21-21.93-14.9-35.98-14.9c-14.05,0-26.78,5.7-35.98,14.9 c-9.21,9.21-14.9,21.93-14.9,35.98s5.7,26.78,14.9,35.98c9.21,9.21,21.93,14.9,35.98,14.9c14.05,0,26.78-5.7,35.98-14.9 c9.21-9.21,14.9-21.93,14.9-35.98S106.63,34.66,97.42,25.46L97.42,25.46z"/></g></svg>
+        <input type="range" id="speed" name="speed" min="0" max="2900" onchange="updateSpeed(this.value)">
+    </div>
+  </div>
+</div>
+<div id="dialogBacking" class="dialogBack">
+  <div id="setupDialog" class="dialog">
+      <h1 style="margin-bottom: 0; font-size: 2.2em;">Select Grid Size</h1>
+      <div class="gridConfig">
+        <h4 style="width: 30%">Rows</h4>
+        <input type="range" id="rows" name="rows" min="3" max="10" oninput="rowLabel.innerText=this.value">
+        <h4 id="rowLabel">7</h4>
+      </div>
+      <div class="gridConfig">
+        <h4 style="width: 30%">Columns</h4>
+        <input type="range" id="cols" name="cols" min="3" max="10" oninput="colLabel.innerText=this.value">
+        <h4 id="colLabel">7</h4>
+      </div>
+      <button id="setRowsCols" onclick="setup()">Set</button>
+  </div>
+</div>
+</body>
+</html>
