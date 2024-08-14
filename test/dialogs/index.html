@@ -1,0 +1,36 @@
+<doctype html>
+<html>
+  <head>
+    <title>Dialog test</title>
+  </head>
+  <body>
+    <form action="">
+      <p>Color picker</p>
+      <input type="color" id="html5colorpicker" onchange="clickColor(0, -1, -1, 5)" value="#ff0000">
+      <p>Time picker</p>
+      <input type="time">
+      <p>Datetime picker</p>
+      <input type="datetime-local">
+      <p>Select element</p>
+      <select name="cars" id="cars" multiple>
+        <option value="volvo">Volvo</option>
+        <option value="saab">Saab</option>
+        <option value="opel">Opel</option>
+        <option value="audi">Audi</option>
+      </select>
+      <p>Datalist</p>
+      <input list="browsers" name="browser" id="browser">
+      <datalist id="browsers">
+        <option value="Edge">
+        <option value="Firefox">
+        <option value="Chrome">
+        <option value="Opera">
+        <option value="Safari">
+      </datalist>
+      <p>URL input</p>
+      <input type="url" id="url">
+      <br><br>
+      <input type="submit">
+    </form>
+  </body>
+</html>
