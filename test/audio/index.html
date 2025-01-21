@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Audio test</title>
+  </head>
+  <body>
+    <audio id="audio1" controls preload="auto">
+      <source src="https://cdn.freesound.org/previews/784/784386_5674468-lq.mp3" type="audio/mpeg">
+      https://cdn.freesound.org/previews/785/785576_1648170-lq.mp3
+      Your browser does not support the audio element.
+    </audio>
+    <audio id="audio2" controls preload="auto">
+      <source src="https://cdn.freesound.org/previews/785/785576_1648170-lq.mp3" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+    <button id="toggle">Toggle audio sources</button>
+  </body>
+  <script>
+    document.getElementById("toggle").addEventListener("click", function() {
+      let audio1 = document.getElementById("audio1");
+      let audio2 = document.getElementById("audio2");
+      if (audio1.paused) {
+        audio2.pause();
+        audio1.play();
+      } else {
+        audio1.pause();
+        audio2.play();
+      }
+    }, false);
+  </script>
+</html>
