@@ -364,6 +364,9 @@ function updateStart(btn, x, y) {
 }
 
 function updateEnd(btn, x, y) {
+  if (isStart(x, y) {
+    return;
+  }
   if (end) {
     getButton2(end).style.backgroundColor = BUTTON_BACKGROUND;
   }
@@ -372,6 +375,9 @@ function updateEnd(btn, x, y) {
 }
 
 function updateObstacles(btn, x, y) {
+  if (isStart(x, y) || isEnd(x, y)) {
+    return;
+  }
   let pos = x + "," + y;
   if (closedNodes.has(pos)) {
     closedNodes.delete(pos);
