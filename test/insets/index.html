@@ -17,13 +17,15 @@
     <h1 id="sal">Safe area inset left is: </h1>
   </body>
   <script>
-    let sat = getComputedStyle(document.documentElement).getPropertyValue("--sat");
-    let sar = getComputedStyle(document.documentElement).getPropertyValue("--sar");
-    let sab = getComputedStyle(document.documentElement).getPropertyValue("--sab");
-    let sal = getComputedStyle(document.documentElement).getPropertyValue("--sal");
-    document.getElementById("sat").innerText += sat;
-    document.getElementById("sar").innerText += sar;
-    document.getElementById("sab").innerText += sab;
-    document.getElementById("sal").innerText += sal;
+    document.addEventListener("DOMContentLoaded", (event) => {
+      let sat = getComputedStyle(document.documentElement).getPropertyValue("--sat");
+      let sar = getComputedStyle(document.documentElement).getPropertyValue("--sar");
+      let sab = getComputedStyle(document.documentElement).getPropertyValue("--sab");
+      let sal = getComputedStyle(document.documentElement).getPropertyValue("--sal");
+      document.getElementById("sat").innerText += sat;
+      document.getElementById("sar").innerText += sar;
+      document.getElementById("sab").innerText += sab;
+      document.getElementById("sal").innerText += sal;
+    });
   </script>
 </html>
