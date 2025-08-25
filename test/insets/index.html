@@ -18,14 +18,16 @@
   </body>
   <script>
     document.addEventListener("DOMContentLoaded", (event) => {
-      let sat = getComputedStyle(document.documentElement).getPropertyValue("--sat");
-      let sar = getComputedStyle(document.documentElement).getPropertyValue("--sar");
-      let sab = getComputedStyle(document.documentElement).getPropertyValue("--sab");
-      let sal = getComputedStyle(document.documentElement).getPropertyValue("--sal");
-      document.getElementById("sat").innerText += sat;
-      document.getElementById("sar").innerText += sar;
-      document.getElementById("sab").innerText += sab;
-      document.getElementById("sal").innerText += sal;
+      setTimeout(function() {
+        let sat = getComputedStyle(document.documentElement).getPropertyValue("--sat");
+        let sar = getComputedStyle(document.documentElement).getPropertyValue("--sar");
+        let sab = getComputedStyle(document.documentElement).getPropertyValue("--sab");
+        let sal = getComputedStyle(document.documentElement).getPropertyValue("--sal");
+        document.getElementById("sat").innerText += sat;
+        document.getElementById("sar").innerText += sar;
+        document.getElementById("sab").innerText += sab;
+        document.getElementById("sal").innerText += sal;
+      }, 5000);
     });
   </script>
 </html>
