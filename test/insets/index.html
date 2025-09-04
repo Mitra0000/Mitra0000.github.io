@@ -10,28 +10,23 @@
     </style>
   </head>
   <body>
-    <button onclick="enterFullscreen()">Click me before the values show</button>
+    <button onclick="enterFullscreen()">Click me</button>
     <h1 id="sat">Safe area inset top is: </h1>
     <h1 id="sar">Safe area inset right is: </h1>
     <h1 id="sab">Safe area inset bottom is: </h1>
     <h1 id="sal">Safe area inset left is: </h1>
   
-  <script>
-    document.addEventListener("DOMContentLoaded", (event) => {
-      setTimeout(function() {
-        let sat = getComputedStyle(document.documentElement).getPropertyValue("--sat");
-        let sar = getComputedStyle(document.documentElement).getPropertyValue("--sar");
-        let sab = getComputedStyle(document.documentElement).getPropertyValue("--sab");
-        let sal = getComputedStyle(document.documentElement).getPropertyValue("--sal");
-        document.getElementById("sat").innerText += sat;
-        document.getElementById("sar").innerText += sar;
-        document.getElementById("sab").innerText += sab;
-        document.getElementById("sal").innerText += sal;
-      }, 5000);
-    });
-    
+  <script>    
     function enterFullscreen() {
       document.documentElement.requestFullscreen();
+      let sat = getComputedStyle(document.documentElement).getPropertyValue("--sat");
+      let sar = getComputedStyle(document.documentElement).getPropertyValue("--sar");
+      let sab = getComputedStyle(document.documentElement).getPropertyValue("--sab");
+      let sal = getComputedStyle(document.documentElement).getPropertyValue("--sal");
+      document.getElementById("sat").innerText += sat;
+      document.getElementById("sar").innerText += sar;
+      document.getElementById("sab").innerText += sab;
+      document.getElementById("sal").innerText += sal;
     }
   </script>
 </body>
