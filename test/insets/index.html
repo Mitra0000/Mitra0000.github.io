@@ -1,4 +1,3 @@
-<!doctype html>
 <html>
   <head>
     <style>
@@ -11,11 +10,12 @@
     </style>
   </head>
   <body>
+    <button onclick="enterFullscreen()">Click me before the values show</button>
     <h1 id="sat">Safe area inset top is: </h1>
     <h1 id="sar">Safe area inset right is: </h1>
     <h1 id="sab">Safe area inset bottom is: </h1>
     <h1 id="sal">Safe area inset left is: </h1>
-  </body>
+  
   <script>
     document.addEventListener("DOMContentLoaded", (event) => {
       setTimeout(function() {
@@ -29,5 +29,10 @@
         document.getElementById("sal").innerText += sal;
       }, 5000);
     });
+    
+    function enterFullscreen() {
+      document.documentElement.requestFullscreen();
+    }
   </script>
+</body>
 </html>
