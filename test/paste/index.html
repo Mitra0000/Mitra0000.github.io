@@ -1,0 +1,14 @@
+<html>
+<head></head>
+<body>
+    <textarea id="in" style="background-color: yellow;"></textarea>
+    <button id="pasteButton">Paste</button>
+    <script>
+      document.getElementById("pasteButton").addEventListener("click", function() {
+         console.log("Pasting");
+         document.getElementById('in').focus();
+         document.execCommand('paste');
+      }, false);
+    </script>
+</body>
+</html>
