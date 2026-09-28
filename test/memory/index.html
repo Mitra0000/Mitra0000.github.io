@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chromium Renderer Memory Regression stress-test</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #50e3c2;
+            --danger: #ff4d4f;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            --border: #333333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0 0 10px 0;
+            font-size: 2.2rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-top: 0;
+            color: var(--secondary);
+        }
+
+        p {
+            color: var(--text-muted);
+            margin: 0 0 15px 0;
+        }
+
+        .meta-box {
+            background-color: rgba(74, 144, 226, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+            color: #ffffff;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s, background-color 0.2s;
+            text-align: center;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn:disabled {
+            background-color: #555555;
+            color: #888888;
+            cursor: not-allowed;
+        }
+
+        .dashboard {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .terminal-log {
+            background-color: #000000;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.85rem;
+            color: #00ff00;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .iframe-container {
+            width: 0;
+            height: 0;
+            border: 0;
+            position: absolute;
+            visibility: hidden;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Chromium Renderer Memory Regression stress-test</h1>
+            <p>Designed to isolate and reproduce the 10x Renderer Memory Regression spiked in Fitbit WebView due to ObjectTemplate duplication, CallbackHolder cppgc deferred lifetimes, and eager Data URI cache pinning.</p>
+        </header>
+
+        <div class="meta-box">
+            <strong>Target Platforms:</strong> This stress-test is especially diagnostic inside <strong>Android WebView</strong> or <strong>Chrome on Android</strong>. In Chrome/Chromium, you can open DevTools Performance monitor or monitor `chrome://tracing` and task manager while running the tests.
+        </div>
+
+        <div class="dashboard">
+            <h2>Real-time Instrumentation</h2>
+            <p>Monitors heap footprint if <code>window.performance.memory</code> is enabled (requires starting Chrome with <code>--enable-precise-memory-info</code> or running inside WebView).</p>
+            
+            <div class="stat-row">
+                <span class="stat-label">JS Heap Size Limit:</span>
+                <span id="heap-limit" class="stat-value">N/A</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Total JS Heap size:</span>
+                <span id="heap-total" class="stat-value">N/A</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Used JS Heap Size:</span>
+                <span id="heap-used" class="stat-value">N/A</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Iframe Contexts Created:</span>
+                <span id="stat-iframes" class="stat-value">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Data URIs Queried:</span>
+                <span id="stat-data-uris" class="stat-value">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Callbacks Registered:</span>
+                <span id="stat-callbacks" class="stat-value">0</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Case 1: ObjectTemplate Duplication -->
+            <div class="card">
+                <div>
+                    <h3>1. ObjectTemplate Duplication</h3>
+                    <p>Creates many short-lived iframes. In each iframe, it instantiates 50+ unique DOM classes (Div, Canvas, Video, Audio, Button, Table, etc.).</p>
+                    <p><em>Regressed code duplicate-compiles ObjectTemplates per-context, ballooning the V8 heap. Clean code shares templates per-isolate.</em></p>
+                </div>
+                <button id="btn-run-templates" class="btn" onclick="runTemplatesTest()">Start Template Test</button>
+            </div>
+
+            <!-- Case 2: CallbackHolder cppgc Deferral -->
+            <div class="card">
+                <div>
+                    <h3>2. CallbackHolder cppgc Deferral</h3>
+                    <p>Creates transient elements and registers thousands of event listener callbacks bound to complex closures, then immediately drops references.</p>
+                    <p><em>Regressed code relies on cppgc deferred sweeper cycles to delete callbacks, keeping bound closures in memory. Clean code deletes them instantly.</em></p>
+                </div>
+                <button id="btn-run-callbacks" class="btn" onclick="runCallbacksTest()">Start Callbacks Test</button>
+            </div>
+
+            <!-- Case 3: Eager Data URI Cache Pinning -->
+            <div class="card">
+                <div>
+                    <h3>3. Eager Data URI Cache Pinning</h3>
+                    <p>Queries MemoryCache with thousands of unique generated inline data URI resources.</p>
+                    <p><em>Regressed code automatically touch-adds and pins every queried data URI in MemoryCache's strong ref list, blocking eviction.</em></p>
+                </div>
+                <button id="btn-run-data-uris" class="btn" onclick="runDataURITest()">Start Data URI Test</button>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 30px;">
+            <button id="btn-stress-all" class="btn btn-danger" style="width: 100%; max-width: 400px; padding: 15px;" onclick="runStressAll()">
+                Run Stress All (All 3 Concurrent)
+            </button>
+        </div>
+
+        <h2>Stress Test Logs</h2>
+        <div id="log" class="terminal-log">
+            [System] Page loaded. Ready for stress-testing...<br>
+        </div>
+    </div>
+
+    <!-- Container for dynamic iframe generation -->
+    <div id="iframe-holder" class="iframe-container"></div>
+
+    <script>
+        const logEl = document.getElementById('log');
+        const iframeHolder = document.getElementById('iframe-holder');
+        
+        let iframeCount = 0;
+        let dataURICount = 0;
+        let callbackCount = 0;
+        let activeTests = {
+            templates: false,
+            callbacks: false,
+            dataUris: false
+        };
+
+        function printLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${timestamp}] ${message}<br>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Format bytes to readable string
+        function formatBytes(bytes) {
+            if (bytes === 0 || isNaN(bytes)) return 'N/A';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Update heap stats
+        function updateHeapStats() {
+            if (window.performance && window.performance.memory) {
+                const mem = window.performance.memory;
+                document.getElementById('heap-limit').textContent = formatBytes(mem.jsHeapSizeLimit);
+                document.getElementById('heap-total').textContent = formatBytes(mem.totalJSHeapSize);
+                document.getElementById('heap-used').textContent = formatBytes(mem.usedJSHeapSize);
+            } else {
+                const warning = "N/A (Enable in Chrome with --enable-precise-memory-info)";
+                document.getElementById('heap-limit').textContent = warning;
+                document.getElementById('heap-total').textContent = warning;
+                document.getElementById('heap-used').textContent = warning;
+            }
+            document.getElementById('stat-iframes').textContent = iframeCount;
+            document.getElementById('stat-data-uris').textContent = dataURICount;
+            document.getElementById('stat-callbacks').textContent = callbackCount;
+        }
+
+        setInterval(updateHeapStats, 1000);
+
+        // --- TEST 1: ObjectTemplate Duplication Stresser ---
+        async function runTemplatesTest() {
+            if (activeTests.templates) {
+                activeTests.templates = false;
+                document.getElementById('btn-run-templates').textContent = "Start Template Test";
+                printLog("Stopping ObjectTemplate duplication stressor...");
+                return;
+            }
+
+            activeTests.templates = true;
+            document.getElementById('btn-run-templates').textContent = "Stop Template Test";
+            printLog("Starting ObjectTemplate duplication stressor...");
+            
+            // List of unique DOM interface classes to instantiate to trigger different ObjectTemplates
+            const domClassesToTouch = [
+                'div', 'span', 'p', 'a', 'button', 'input', 'canvas', 'img', 'video', 'audio',
+                'table', 'tr', 'td', 'th', 'thead', 'tbody', 'ul', 'ol', 'li', 'h1', 'h2', 'h3',
+                'form', 'select', 'option', 'textarea', 'label', 'iframe', 'svg', 'path', 'hr',
+                'br', 'dialog', 'progress', 'meter', 'details', 'summary', 'fieldset', 'legend',
+                'picture', 'source', 'track', 'map', 'area', 'col', 'colgroup', 'caption'
+            ];
+
+            const loop = async () => {
+                if (!activeTests.templates) return;
+
+                // Create a temporary iframe (new V8 context)
+                const iframe = document.createElement('iframe');
+                iframeHolder.appendChild(iframe);
+                iframeCount++;
+
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Instantiate one instance of each interface to force V8 ObjectTemplate creation in this context
+                    domClassesToTouch.forEach(tag => {
+                        const el = iframeDoc.createElement(tag);
+                        // Access a property to force complete wrapper allocation
+                        const _ = el.ownerDocument;
+                    });
+                } catch (e) {
+                    // Ignore cross-origin / loading errors
+                }
+
+                // Cleanup context (dropping the iframe)
+                iframeHolder.removeChild(iframe);
+
+                // Run in batches to avoid locking the main thread completely
+                if (iframeCount % 50 === 0) {
+                    printLog(`Created and destroyed ${iframeCount} iframes. Memory pressure mounting...`);
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                setTimeout(loop, 5);
+            };
+
+            loop();
+        }
+
+        // --- TEST 2: CallbackHolder cppgc Deferral Stresser ---
+        async function runCallbacksTest() {
+            if (activeTests.callbacks) {
+                activeTests.callbacks = false;
+                document.getElementById('btn-run-callbacks').textContent = "Start Callbacks Test";
+                printLog("Stopping CallbackHolder stressor...");
+                return;
+            }
+
+            activeTests.callbacks = true;
+            document.getElementById('btn-run-callbacks').textContent = "Stop Callbacks Test";
+            printLog("Starting CallbackHolder stressor (generating short-lived elements with listeners)...");
+
+            const events = ['click', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'keydown', 'keyup', 'keypress'];
+
+            const loop = async () => {
+                if (!activeTests.callbacks) return;
+
+                // Create 100 transient elements in memory
+                for (let i = 0; i < 100; i++) {
+                    const el = document.createElement('div');
+                    
+                    // Bind many event listeners with heavy closures capturing context data
+                    const heavyContextData = new Uint8Array(1000); // 1KB closure context size
+                    events.forEach(evt => {
+                        el.addEventListener(evt, function heavyCallback(e) {
+                            // Capturing context keeps it alive
+                            const _ = heavyContextData;
+                            console.log(e);
+                        });
+                        callbackCount++;
+                    });
+
+                    // Immediately drop reference to the element and callbacks
+                }
+
+                if (callbackCount % 9000 === 0) {
+                    printLog(`Allocated ${callbackCount} callbacks. Triggering V8 GCs...`);
+                    // Suggesting GC
+                    if (window.gc) window.gc();
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                }
+                setTimeout(loop, 10);
+            };
+
+            loop();
+        }
+
+        // --- TEST 3: Eager Data URI Cache Pinning Stresser ---
+        async function runDataURITest() {
+            if (activeTests.dataUris) {
+                activeTests.dataUris = false;
+                document.getElementById('btn-run-data-uris').textContent = "Start Data URI Test";
+                printLog("Stopping Eager Data URI cache pinning stressor...");
+                return;
+            }
+
+            activeTests.dataUris = true;
+            document.getElementById('btn-run-data-uris').textContent = "Stop Data URI Test";
+            printLog("Starting Eager Data URI cache pinning stressor (loading and querying unique data URIs)...");
+
+            const loop = async () => {
+                if (!activeTests.dataUris) return;
+
+                // Generate and load 50 unique data URIs of stylized SVG squares
+                for (let i = 0; i < 50; i++) {
+                    const uniqueId = Math.random().toString(36).substring(7);
+                    // Stylized SVG containing unique id to prevent hits to the same URL
+                    const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                        <rect width="100" height="100" fill="#${Math.floor(Math.random()*16777215).toString(16)}"/>
+                        <text x="10" y="50" fill="white">${uniqueId}</text>
+                    </svg>`;
+                    
+                    const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`;
+                    
+                    // Query/Fetch the resource using an Image element, forcing it into MemoryCache
+                    const img = new Image();
+                    img.src = dataUri;
+                    dataURICount++;
+                }
+
+                if (dataURICount % 500 === 0) {
+                    printLog(`Loaded and queried ${dataURICount} unique Data URIs in MemoryCache...`);
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                }
+                setTimeout(loop, 20);
+            };
+
+            loop();
+        }
+
+        // --- Run All Stressors Concurrently ---
+        function runStressAll() {
+            printLog("💥 TRIPLE STRESS TEST STARTED! CONCURRENCY ENGAGED! 💥");
+            if (!activeTests.templates) runTemplatesTest();
+            if (!activeTests.callbacks) runCallbacksTest();
+            if (!activeTests.dataUris) runDataURITest();
+        }
+    </script>
+</body>
+</html>
